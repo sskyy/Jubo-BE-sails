@@ -67,7 +67,6 @@ module.exports = {
 						// Images( image.addr ).size(thumbWidth).save( thumbAddr + image.id,{quality : 90})
 						res.type( image.type )
 						// res.sendFile( thumbAddr + image.id )
-						console.log("sending file", path.resolve(image.addr + image.id))
 						res.sendfile( path.resolve(image.addr + image.id)  ) 
 					}
 				})
