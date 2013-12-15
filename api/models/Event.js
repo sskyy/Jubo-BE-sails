@@ -10,29 +10,35 @@ module.exports = {
 
   attributes: {
   	
-    id: 'integer',
-    uid: {
-        type : 'integer',
-        defaultsTo : 0
+        uid: {
+            type : 'string',
+            defaultsTo : ''
+        },
+        title: {
+            type:'string',
+            required : true,
+        },
+        content : 'string',
+        metrics : {
+            type : 'json',
+            defaultsTo : {}
+        },
+        pieces : {
+            type:'array',
+            defaultsTo : [],
+        },
+        args : {
+            type : 'json',
+            defaultsTo : {}
+        }
+
     },
-    title: {
-        type:'string',
-        required : true,
-    },
-    content : 'string',
-    metrics : {
-        type : 'json',
-        defaultsTo : {}
-    },
-    pieces : {
-        type:'array',
-        defaultsTo : [],
-    },
-    args : {
-        type : 'json',
-        defaultsTo : {}
+
+
+    beforeCreate: function( event, next) {
+        event._csrf &&delete event._csrf
+        next();
     }
-    
-  }
+
 
 };

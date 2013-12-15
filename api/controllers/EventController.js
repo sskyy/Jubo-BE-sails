@@ -14,7 +14,7 @@
  *
  * @docs        :: http://sailsjs.org/#!documentation/controllers
  */
-
+var _ = require('underscore')
 module.exports = {
     
   
@@ -24,7 +24,38 @@ module.exports = {
    * Overrides for the settings in `config/controllers.js`
    * (specific to EventController)
    */
-  _config: {}
+  _config: {},
 
-  
+  eventWithPieces : function(req, res){
+  	var result = {}, id = req.param('id')
+  	if( id ){
+		Event.findOne( id, function( err, event ){
+			if( err ){
+				console.log("ERR: load event error.")
+				return res.json(event)
+			}
+
+			if( !(event.pieces instanceof Array) ) {
+				console.log( "DEB: event.pieces is not array", event.pieces instanceof Array)
+				return res.json(event)
+			}else{
+				var ids = event.pieces
+				event.pieces = []
+				Piece.find().where({id:ids}).exec(function( err, pieces){
+					if( err ){
+						console.log("ERR: load pieces error.")
+						return res.json(event)
+					}
+					for( var i in pieces){
+						var piece = _.pick(pieces[i],'title','id','metrics','summary')
+						piece.summary = piece.summary || pieces[i].content
+						event.pieces.push(pieces[i])
+					}
+					return res.json(event)
+				})
+			}
+		})  		
+  	}
+
+  }
 };
