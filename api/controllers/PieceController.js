@@ -45,6 +45,8 @@ module.exports = {
 					piece.pics = images
 					return res.json(piece)
 				})
+			}else{
+				return res.json(piece)
 			}
 		})
 	}  
