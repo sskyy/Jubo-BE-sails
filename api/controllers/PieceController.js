@@ -27,6 +27,26 @@ module.exports = {
 		}else{
 			res.json(pieces)
 		}
+	},
+	pieceWithPics : function(req, res){
+		var id = req.param('id')
+		Piece.findOne( id, function(err, piece){
+			if( err ){
+				console.log("ERR: piece not found",id)
+				return res.send(404)
+			}
+
+			if( piece.pics.length > 0 ){
+				Image.find().where({id:piece.pics}).exec(function( err, images){
+					if( err ){
+						console.log("ERR: read pics for piece failed")
+						piece.pics = []
+					}
+					piece.pics = images
+					return res.json(piece)
+				})
+			}
+		})
 	}  
 
 };

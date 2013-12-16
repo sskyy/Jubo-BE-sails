@@ -20,7 +20,7 @@ module.exports = {
 		//可配置
 		var dir = __dirname + "/../../assets/upload/";
 
-		console.log("file",JSON.stringify(req.files.file) )
+		// console.log("file",JSON.stringify(req.files.file) )
 		Image.create({
 			pid : "hjklkj",
 			uid : '',
@@ -67,6 +67,27 @@ module.exports = {
 						// Images( image.addr ).size(thumbWidth).save( thumbAddr + image.id,{quality : 90})
 						res.type( image.type )
 						// res.sendFile( thumbAddr + image.id )
+						res.sendfile( path.resolve(image.addr + image.id)  ) 
+					}
+				})
+			}
+		})
+	},
+
+
+	medium : function( req, res){
+		var id = req.param('id')
+		Image.findOne( id, function(err, image){
+			if( err ){
+				console.log('ERR: image record not exist')
+				res.send(404)
+			}else{
+				fs.exists( path.resolve(image.addr + image.id), function(exists){
+					if( !exists){
+						console.log('ERR: image file not exist')
+						res.send(404)
+					}else{
+						res.type( image.type )
 						res.sendfile( path.resolve(image.addr + image.id)  ) 
 					}
 				})
