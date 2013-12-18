@@ -32,13 +32,5 @@ module.exports = {
             defaultsTo : {}
         }
 
-    },
-
-
-    beforeCreate: function( event, next) {
-        event._csrf &&delete event._csrf
-        next();
     }
-
-
 };

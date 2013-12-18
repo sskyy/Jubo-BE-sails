@@ -22,7 +22,7 @@ module.exports = {
   _config: {},
   connect : function( req, res){
     if( req.session.user && req.session.user.id ){
-      return res.json( req.session.user )
+      return res.json( _.pick(req.session.user,'id','name','email') )
     }
 
     return res.json({
@@ -80,7 +80,7 @@ module.exports = {
           if( err ){
             res.send(500,err)
           }else{
-            res.send(200)
+            res.send(200,{msg:'welcome' + user.name})
           }
         })
       }else{
@@ -120,8 +120,8 @@ module.exports = {
     if( !req.session.user || !req.session.user.id ){
       res.send(404)
     }else{
-      req.session = null
-      res.send(200)
+      req.session.destroy()
+      res.send(200,{msg:'bye'})
     }
   }
 };

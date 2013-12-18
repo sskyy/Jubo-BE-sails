@@ -56,6 +56,48 @@ module.exports = {
 			}
 		})  		
   	}
+  },
+  create : function( req, res){
+    if( !req.session.user ||!req.session.user.id){
+        return next({msg:"user not logged in"});
+    }
 
+    if( !req.param("title") || !req.param("content") ){
+		return res.send(406,{msg:"information not enough"})
+    }
+
+    Event.create({
+    	title : req.param('title'),
+    	content : req.param('content'),
+    	uid : req.session.user.id
+    }).done(function(err, event){
+    	if( err ){
+    		return res.send(500,{msg:"event create failed"})
+    	}
+
+    	res.json(event)
+    }) 
+  },
+  delete:function(req,res){
+    if( !req.session.user ||!req.session.user.id){
+        return next({msg:"user not logged in"});
+    }
+
+    if( !req.param("id") ){
+		return res.send(406,{msg:"information not enough"})
+    }
+
+    Event.findOne( req.param("id"),function( err, event){
+    	if( err || !event ){
+    		return res.send("500",{msg:"error find event"})
+    	}
+    	if( event.uid != req.session.user.id ){
+    		return res.send(406,{msg:"you are not the author"})
+    	}
+    	event.destroy(function(){
+    		return res.send(200,{msg:"event delete success"})
+    	})
+    })
   }
+
 };
