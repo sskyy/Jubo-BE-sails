@@ -20,84 +20,96 @@ module.exports = {
   
 
 
-  /**
-   * Overrides for the settings in `config/controllers.js`
-   * (specific to EventController)
-   */
-  _config: {},
+	/**
+	* Overrides for the settings in `config/controllers.js`
+	* (specific to EventController)
+	*/
+	_config: {},
 
-  eventWithPieces : function(req, res){
-  	var result = {}, id = req.param('id')
-  	if( id ){
-		Event.findOne( id, function( err, event ){
-			if( err ){
-				console.log("ERR: load event error.")
-				return res.json(event)
-			}
-
-			if( !(event.pieces instanceof Array) ) {
-				console.log( "DEB: event.pieces is not array", event.pieces instanceof Array)
-				return res.json(event)
-			}else{
-				var ids = event.pieces
-				event.pieces = []
-				Piece.find().where({id:ids}).exec(function( err, pieces){
-					if( err ){
-						console.log("ERR: load pieces error.")
-						return res.json(event)
-					}
-					for( var i in pieces){
-						var piece = _.pick(pieces[i],'title','id','metrics','summary')
-						piece.summary = piece.summary || pieces[i].content
-						event.pieces.push(pieces[i])
-					}
+	eventWithPieces : function(req, res){
+		var result = {}, id = req.param('id')
+		if( id ){
+			Event.findOne( id, function( err, event ){
+				if( err ){
+					console.log("ERR: load event error.")
 					return res.json(event)
-				})
+				}
+
+				if( !(event.pieces instanceof Array) ) {
+					console.log( "DEB: event.pieces is not array", event.pieces instanceof Array)
+					return res.json(event)
+				}else{
+					var ids = event.pieces
+					event.pieces = []
+					Piece.find().where({id:ids}).exec(function( err, pieces){
+						if( err ){
+							console.log("ERR: load pieces error.")
+							return res.json(event)
+						}
+						for( var i in pieces){
+							var piece = _.pick(pieces[i],'title','id','metrics','summary')
+							piece.summary = piece.summary || pieces[i].content
+							event.pieces.push(pieces[i])
+						}
+						return res.json(event)
+					})
+				}
+			})  		
+		}
+	},
+	create : function( req, res){
+		if( !req.session.user ||!req.session.user.id){
+		    return next({msg:"user not logged in"});
+		}
+
+		if( !req.param("title") || !req.param("content") ){
+			return res.send(406,{msg:"information not enough"})
+		}
+
+		Event.create({
+			title : req.param('title'),
+			content : req.param('content'),
+			uid : req.session.user.id
+		}).done(function(err, event){
+			if( err ){
+				return res.send(500,{msg:"event create failed"})
 			}
-		})  		
-  	}
-  },
-  create : function( req, res){
-    if( !req.session.user ||!req.session.user.id){
-        return next({msg:"user not logged in"});
-    }
 
-    if( !req.param("title") || !req.param("content") ){
-		return res.send(406,{msg:"information not enough"})
-    }
+			res.json(event)
+		}) 
+	},
+	delete:function(req,res){
+		if( !req.session.user ||!req.session.user.id){
+		    return res.send(401,{msg:"user not logged in"});
+		}
 
-    Event.create({
-    	title : req.param('title'),
-    	content : req.param('content'),
-    	uid : req.session.user.id
-    }).done(function(err, event){
-    	if( err ){
-    		return res.send(500,{msg:"event create failed"})
-    	}
+		if( !req.param("id") ){
+			return res.send(406,{msg:"information not enough"})
+		}
 
-    	res.json(event)
-    }) 
-  },
-  delete:function(req,res){
-    if( !req.session.user ||!req.session.user.id){
-        return next({msg:"user not logged in"});
-    }
-
-    if( !req.param("id") ){
-		return res.send(406,{msg:"information not enough"})
-    }
-
-    Event.findOne( req.param("id"),function( err, event){
-    	if( err || !event ){
-    		return res.send("500",{msg:"error find event"})
-    	}
-    	if( event.uid != req.session.user.id ){
-    		return res.send(406,{msg:"you are not the author"})
-    	}
-    	event.destroy(function(){
-    		return res.send(200,{msg:"event delete success"})
-    	})
-    })
-  }
+		Event.findOne( req.param("id"),function( err, event){
+			if( err || !event ){
+				return res.send("500",{msg:"error find event"})
+			}
+			if( event.uid != req.session.user.id ){
+				return res.send(406,{msg:"you are not the author"})
+			}
+			event.destroy(function(){
+				return res.send(200,{msg:"event delete success"})
+			})
+		})
+	},
+	myEvents : function(req,res){
+		if( !req.session.user || !req.session.user.id ){
+		    return res.send(401,{msg:"user not logged in",user:req.session.user});
+		}
+		var uid = req.session.user.id
+		Event.find({uid:uid},function(err,events){
+			if( err){
+				return res.send("500",{msg:"error find event"})
+			}
+			res.json(events)
+		})
+	}
 
 };

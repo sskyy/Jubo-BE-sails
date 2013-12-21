@@ -47,8 +47,12 @@ module.exports = {
 
       User.findOne(where).done(function(err, user){
         if( err ){
-          return res.send(500)
+          return res.send(500,{msg:'server error'})
         }else{
+          if( !user){
+            return res.send(404,{msg:'user not found'})
+          }
+          
           req.session.user = user
           user.lastLogin = new Date()
           user.save(function(err){
