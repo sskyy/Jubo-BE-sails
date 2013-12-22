@@ -36,6 +36,10 @@ module.exports = {
 	    metrics : {
 	        type : 'json',
 	        defaultsTo : {}
+	    },
+	    vote : {
+	    	type : 'integer',
+	    	defaultsTo : 0
 	    }
 	    
 	},

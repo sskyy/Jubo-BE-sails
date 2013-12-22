@@ -30,6 +30,10 @@ module.exports = {
         args : {
             type : 'json',
             defaultsTo : {}
+        },
+        vote : {
+            type : 'integer',
+            defaultsTo : 0
         }
 
     }

@@ -35,25 +35,35 @@ module.exports = {
 					return res.json(event)
 				}
 
-				if( !(event.pieces instanceof Array) ) {
-					console.log( "DEB: event.pieces is not array", event.pieces instanceof Array)
-					return res.json(event)
-				}else{
-					var ids = event.pieces
-					event.pieces = []
-					Piece.find().where({id:ids}).exec(function( err, pieces){
-						if( err ){
-							console.log("ERR: load pieces error.")
-							return res.json(event)
-						}
-						for( var i in pieces){
-							var piece = _.pick(pieces[i],'title','id','metrics','summary')
-							piece.summary = piece.summary || pieces[i].content
-							event.pieces.push(pieces[i])
-						}
+				//load author
+				User.findOne( event.uid,function(err, user){
+					if( !err && user ){
+						console.log("err:load author errr")
+						event.author = _.pick(user,'id','name','avatar')
+					}
+
+
+					//load pieces
+					if( !(event.pieces instanceof Array) ) {
+						console.log( "DEB: event.pieces is not array", event.pieces instanceof Array)
 						return res.json(event)
-					})
-				}
+					}else{
+						var ids = event.pieces
+						event.pieces = []
+						Piece.find().where({id:ids}).exec(function( err, pieces){
+							if( err ){
+								console.log("ERR: load pieces error.")
+								return res.json(event)
+							}
+							for( var i in pieces){
+								var piece = _.pick(pieces[i],'title','id','metrics','summary')
+								piece.summary = piece.summary || pieces[i].content
+								event.pieces.push(pieces[i])
+							}
+							return res.json(event)
+						})
+					}
+				})
 			})  		
 		}
 	},
