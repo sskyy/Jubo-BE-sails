@@ -18,6 +18,15 @@ module.exports = {
         email : {
             type :'string'
         },
+        sns : {
+        	type: 'json'
+        },
+        avatar : {
+        	type : 'string'
+        },
+        sign : {
+        	type : 'string'
+        },
         lastLogin : {
             type : 'date'
         },
@@ -27,7 +36,10 @@ module.exports = {
         }
     },
     beforeCreate: function(values, next) {
-        values.password = EncryptService.encrypt(values.password) 
+    	//allow empty password for users logged in with openid
+    	if( values.password ){
+	        values.password = EncryptService.encrypt(values.password) 
+    	}
         next()
     }
 
