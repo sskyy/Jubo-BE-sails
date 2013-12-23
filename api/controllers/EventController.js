@@ -120,34 +120,5 @@ module.exports = {
 			}
 			res.json(events)
 		})
-	},
-	ranking : function(req,res){
-		Event.find().limit(10).sort({ createdAt: 'desc' }).exec(function(err,events){
-			if( err){
-				return res.send("500",{msg:"error find event"})
-			}
-			if( events.length == 0 ){
-				return res.json(events)
-			}else{
-				var uids = _.uniq(_.compact(_.pluck( events,"uid" )))
-				User.find().where({id:uids}).exec(function(err,users){
-					//rescadule data structure
-					if( err ){
-						console.log("finding user err")
-						return res.json(events)
-					}
-
-					users = _.indexBy( users, "id")
-					return res.json( events.map(function(event){
-						if( users[event.uid] ){
-							event.author = _.pick(users[event.uid],"id","name")
-						}
-						return event
-					}))
-				})
-			}
-
-		})
 	}
-
 };
