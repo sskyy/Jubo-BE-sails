@@ -20,7 +20,7 @@ var _ = require('lodash'),
 module.exports = {
   _config: {},
   digest : function(req,res){
-    Head.find().exec(function(err, list){
+    Heat.find().exec(function(err, list){
         for( var i = 0,length=list.length;i<length;i++){
             list[i].score = caculateScore( list[i].vote, list[i].createdAt)
         }
