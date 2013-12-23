@@ -79,8 +79,15 @@ module.exports = {
 	        	event.save(function(){
 	        		console.log("DEB: event saved")
 	        	})
-	        	console.log("DEB: piece afterCreate done.")
-	        	next()
+
+                //throw it into heatqueue
+                Heat.create({
+                    entity_id : piece.id,
+                    type : 'piece'
+                }).done(function(){
+                    console.log("DEB: piece afterCreate done.")
+                    next()
+                })
 	        })
     	}else{
     		console.log("DEB: piece afterCreate, have no eid.")

@@ -36,5 +36,15 @@ module.exports = {
             defaultsTo : 0
         }
 
+    },
+    afterCreate:function( event,next ){
+        //throw it into heatqueue
+        Heat.create({
+            entity_id : event.id,
+            type : 'event'
+        }).done(function(){
+            console.log("DEB: event afterCreate done.")
+            next()
+        })
     }
 };
