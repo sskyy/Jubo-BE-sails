@@ -30,9 +30,9 @@ module.exports = {
 		var result = {}, id = req.param('id')
 		if( id ){
 			Event.findOne( id, function( err, event ){
-				if( err ){
+				if( err||!event ){
 					console.log("ERR: load event error.")
-					return res.json(event)
+					return res.send(500,'error load event')
 				}
 
 				//load author
@@ -120,5 +120,33 @@ module.exports = {
 			}
 			res.json(events)
 		})
+	},
+	newest : function( req, res){
+        Event.find().limit(20).sort('createdAt').exec(function(err,events){
+            if( err){
+                return res.send("500",{msg:"error find events"})
+            }
+            if( events.length == 0 ){
+                return res.json(events)
+            }else{
+                var uids = _.uniq(_.compact(_.pluck( events,"uid" )))
+                User.find().where({id:uids}).exec(function(err,users){
+                    //rescadule data structure
+                    if( err ){
+                        console.log("finding user err")
+                        return res.json(events)
+                    }
+
+                    users = _.indexBy( users, "id")
+                    return res.json( events.map(function(entity){
+                        if( users[entity.uid] ){
+                            entity.author = _.pick(users[entity.uid],"id","name")
+                        }
+                        return entity
+                    }))
+                })
+            }
+
+        })
 	}
 };

@@ -23,7 +23,7 @@ module.exports = {
 			form:{
 				client_id:client_id,
 				client_secret:secret,
-				redirect_uri:encodeURIComponent("http://127.0.0.1:1337/oauth/douban"),
+				redirect_uri:encodeURIComponent("http://www.buxiache.com:1337/oauth/douban"),
 				grant_type:"authorization_code",
 				code:code
 			}
@@ -64,7 +64,7 @@ module.exports = {
 							if( localUser ){
 								console.log("found local user",JSON.stringify(localUser))
 								req.session.user = localUser
-								res.redirect("http://127.0.0.1:9000")
+								res.redirect("http://www.buxiache.com:9000")
 							}else{
 								res.send(404,"record error, local user not found")
 								//TODO deal with data mistake
@@ -92,10 +92,121 @@ module.exports = {
 								}
 								console.log("all done")
 								req.session.user = localUser
-								res.redirect("http://127.0.0.1:9000")
+								res.redirect("http://www.buxiache.com:9000")
 							})
 
 						})
+					}
+				})
+
+
+			})
+
+		})
+	},
+	weibo : function(req,res){
+		var code = req.query.code,
+		    client_id = "2773636773",
+		    secret = "6a55cc27f6f91699e540b7aedc044a74"
+
+		if( !code ){
+			return  res.send(401,"user not authorized.")
+		}
+
+		request({
+			uri : 'https://api.weibo.com/oauth2/access_token',
+			method : "POST",
+			form:{
+				client_id:client_id,
+				client_secret:secret,
+				redirect_uri:"http://www.buxiache.com:1337/oauth/weibo",
+				grant_type:"authorization_code",
+				code:code
+			}
+		},function( err, response, body){
+			if( err ){
+				return res.send(401,{msg:"sending request for access token failed",err:err})
+			}
+
+			body = JSON.parse( body )
+			if( body.code ){
+				return res.send(401,{msg:body.msg})
+			}
+			var access_token = body.access_token
+			console.log("get access_token",body)
+
+			//get user info
+			request({
+				url : "https://api.weibo.com/2/account/get_uid.json",
+				qs : {
+			  		"access_token":access_token
+				}
+			},function( err, response, body){
+				if( err){
+			  		return res.send(401,{msg:"get user info failed",err:err})
+				}
+
+				body= JSON.parse( body)
+				if( !body.uid ){
+			  		return res.send(401,{msg:body})
+				}
+
+				var uid = body.uid,
+					snsId= "weibo"+uid
+
+				Oauth.findOne({snsId:snsId},function(err,oauthUser){
+					if( oauthUser ){
+						console.log("user already logined with douban")
+						User.findOne(oauthUser.localId,function(err, localUser){
+							if( localUser ){
+								console.log("found local user",JSON.stringify(localUser))
+								req.session.user = localUser
+								res.redirect("http://www.buxiache.com:9000")
+							}else{
+								res.send(404,"record error, local user not found")
+								//TODO deal with data mistake
+							}
+						})
+					}else{
+						console.log("new user logined with weibo")
+
+						request({
+							url : "https://api.weibo.com/2/users/show.json",
+							qs : {
+								access_token : access_token,
+								uid : uid
+							}
+						},function(err, response, body){
+							var user = JSON.parse(body),
+								newUser = {
+									name : user.name,
+									avatar : user.avatar_large,
+									sign :user.description,
+									sns : {
+										weibo : user.url
+									},
+									lastLogin : new Date()
+								}
+
+							User.create(newUser).done(function(err,localUser){
+								if( err ){
+									return res.send(500,"create local user failed")
+								}
+								user.snsId = "weibo" + user.id
+								user.localId = localUser.id
+								Oauth.create( user,function(err, oauthUser){
+									if( err ){
+										return res.send(500,"create oauth user failed")
+									}
+									console.log("all done")
+									req.session.user = localUser
+									res.redirect("http://www.buxiache.com:9000")
+								})
+
+							})
+						})
+
+
 					}
 				})
 
