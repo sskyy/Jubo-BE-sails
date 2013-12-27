@@ -230,7 +230,7 @@ module.exports = {
 			form:{
 				client_id:client_id,
 				client_secret:secret,
-				redirect_uri:encodeURIComponent("http://www.buxiache.com:1337/oauth/google"),
+				redirect_uri:"http://www.buxiache.com:1337/oauth/google",
 				grant_type:"authorization_code",
 				code:code
 			}
@@ -244,9 +244,10 @@ module.exports = {
 				return res.send(401,{msg:body.msg})
 			}
 
-			// console.log("get access_token",body.access_token)
+			// console.log("get access_token",body)
 
 			//get user info
+			var access_token = body.access_token
 			request({
 				url : "https://www.googleapis.com/plus/v1/people/me",
 				headers : {
@@ -254,7 +255,7 @@ module.exports = {
 				}
 			},function( err, response, body){
 				if( err){
-			  		return res.send(401,{msg:"get user info failed",err:err})
+			  		return res.send(401,{msg:"get user info failed",err:err,access_token:access_token})
 				}
 
 				var user= JSON.parse( body)
@@ -279,17 +280,19 @@ module.exports = {
 						})
 					}else{
 						console.log("new user logined with google")
-
-						var newUser = _.pick( user, 'name','avatar')
+						// console.log( JSON.stringify(user))
+						var newUser = {}
+						newUser.name = user.name.givenName
+						newUser.avatar = user.image.url
 						newUser.sign = user.desc
 						newUser.sns = {
-							google : user.alt
+							google : user.url
 						}
 						newUser.lastLogin = new Date()
 
-						User.create(newUser).done(function(err,localUser){
+						User.create(newUser).done(function(err,localUser,newUser){
 							if( err ){
-								return res.send(500,"create local user failed")
+								return res.send(500,{err:err,localUser:localUser})
 							}
 							user.snsId = "google" + user.id
 							user.localId = localUser.id
